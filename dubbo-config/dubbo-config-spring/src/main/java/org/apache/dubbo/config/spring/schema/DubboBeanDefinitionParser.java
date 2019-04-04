@@ -384,7 +384,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             }
         }
     }
-
+    //解析bean
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         return parse(element, parserContext, beanClass, required);

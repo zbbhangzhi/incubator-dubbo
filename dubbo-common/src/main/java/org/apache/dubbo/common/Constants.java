@@ -625,7 +625,7 @@ public class Constants {
 
     @Deprecated
     public static final String SHUTDOWN_WAIT_SECONDS_KEY = "dubbo.service.shutdown.wait.seconds";
-
+    //优雅停机超时时间
     public static final String SHUTDOWN_WAIT_KEY = "dubbo.service.shutdown.wait";
 
     public static final String IS_SERVER_KEY = "isserver";

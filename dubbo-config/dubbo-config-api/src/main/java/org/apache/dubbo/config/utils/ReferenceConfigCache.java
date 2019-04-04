@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * A simple util class for cache {@link ReferenceConfig}.
+ * 用于缓存ReferenceConfig
  * <p>
  * {@link ReferenceConfig} is a heavy Object, it's necessary to cache these object
  * for the framework which create {@link ReferenceConfig} frequently.

@@ -24,7 +24,8 @@ import java.util.Map;
 
 /**
  * RegistryConfig
- *
+ * 注册中心配置
+ * 注册中心提供：注册服务，订阅服务
  * @export
  */
 public class RegistryConfig extends AbstractConfig {
@@ -54,11 +55,13 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Protocol for register center
+     * todo
      */
     private String protocol;
 
     /**
      * Network transmission type
+     * todo
      */
     private String transporter;
 
@@ -70,6 +73,7 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * The group the services registry in
+     * todo
      */
     private String group;
 
@@ -77,11 +81,13 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Request timeout in milliseconds for register center
+     * 请求注册中心超时时间
      */
     private Integer timeout;
 
     /**
      * Session timeout in milliseconds for register center
+     * 与注册中心会话超时世家
      */
     private Integer session;
 
@@ -97,21 +103,28 @@ public class RegistryConfig extends AbstractConfig {
 
     /**
      * Whether to check if register center is available when boot up
+     * 启动时检查注册中心是否启动
+     * true：服务提供者未启动则报错
      */
     private Boolean check;
 
     /**
      * Whether to allow dynamic service to register on the register center
+     * 是否允许服务动态注册到注册中心
+     * false：用于希望人工管理服务的上线与下线
      */
     private Boolean dynamic;
 
     /**
      * Whether to export service on the register center
+     * 是否允许注册服务到注册中心
+     * false：常用于测试阶段 注册中心只订阅不注册 比如正在开发的服务不注册
      */
     private Boolean register;
 
     /**
      * Whether allow to subscribe service on the register center
+     * 是否允许从注册中心订阅服务
      */
     private Boolean subscribe;
 

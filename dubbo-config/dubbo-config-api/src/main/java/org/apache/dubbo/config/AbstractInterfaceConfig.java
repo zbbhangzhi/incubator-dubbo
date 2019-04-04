@@ -72,6 +72,8 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * Local stub class name for the service interface
+     * 本地存根 todo
+     * 适用于在调用服务器实现逻辑前的一些参数验证或失败返回
      */
     protected String stub;
 
@@ -129,6 +131,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     /**
      * Registry centers
+     * 多注册中心配置 todo
      */
     protected List<RegistryConfig> registries;
 
@@ -286,6 +289,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      */
     protected List<URL> loadRegistries(boolean provider) {
         // check && override if necessary
+        //因为可能是多中心注册
         List<URL> registryList = new ArrayList<URL>();
         if (CollectionUtils.isNotEmpty(registries)) {
             for (RegistryConfig config : registries) {
@@ -728,7 +732,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     public RegistryConfig getRegistry() {
         return CollectionUtils.isEmpty(registries) ? null : registries.get(0);
     }
-
+    //设置服务暴露的注册中心
     public void setRegistry(RegistryConfig registry) {
         List<RegistryConfig> registries = new ArrayList<RegistryConfig>(1);
         registries.add(registry);

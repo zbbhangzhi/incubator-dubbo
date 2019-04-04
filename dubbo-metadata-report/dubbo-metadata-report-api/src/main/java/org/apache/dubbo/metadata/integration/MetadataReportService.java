@@ -74,7 +74,7 @@ public class MetadataReportService {
         }
         return metadataReportService;
     }
-
+    //发布服务
     public void publishProvider(URL providerUrl) throws RpcException {
         //first add into the list
         // remove the individul param

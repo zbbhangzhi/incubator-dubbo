@@ -43,6 +43,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
 
     /**
      * max concurrent invocations
+     * 最大客户端并行占有请求数
      */
     protected Integer actives;
 
@@ -64,7 +65,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
 
     /**
      * The name of mock class which gets called when a service fails to execute
-     *
+     * 服务无法使用时调用的mock服务
      * note that: the mock doesn't support on the provider side，and the mock is executed when a non-business exception
      * occurs after a remote service call
      */
@@ -78,6 +79,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
     /**
      * Cache the return result with the call parameter as key, the following options are available: lru, threadlocal,
      * jcache, etc.
+     * 热门结果缓存策略
      */
     protected String cache;
 

@@ -39,6 +39,9 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Thread local context. (API, ThreadLocal, ThreadSafe)
+ * 上下文信息：当前调用过程所需环境信息 是ThreadLocal的临时状态记录器
+ * 所有配置信息都转成URL形式
+ *
  * <p>
  * Note: RpcContext is a temporary state holder. States in RpcContext changes every time when request is sent or received.
  * For example: A invokes B, then B invokes C. On service B, RpcContext saves invocation info from A to B before B
@@ -67,7 +70,7 @@ public class RpcContext {
             return new RpcContext();
         }
     };
-
+    //隐式参数传递 类似cookie
     private final Map<String, String> attachments = new HashMap<String, String>();
     private final Map<String, Object> values = new HashMap<String, Object>();
     private Future<?> future;

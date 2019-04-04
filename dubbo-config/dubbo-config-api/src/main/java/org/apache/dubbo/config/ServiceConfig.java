@@ -92,6 +92,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     /**
      * A {@link ProxyFactory} implementation that will generate a exported service proxy,the JavassistProxyFactory is its
      * default implementation
+     * 为当前服务生成代理类
      */
     private static final ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
@@ -112,6 +113,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     /**
      * The exported services
+     * 暴露出去的服务集合
      */
     private final List<Exporter<?>> exporters = new ArrayList<Exporter<?>>();
 
@@ -137,6 +139,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     /**
      * The method configuration
+     * 配置的方法
      */
     private List<MethodConfig> methods;
 
@@ -162,6 +165,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     /**
      * whether it is a GenericService
+     * todo 泛化服务类型？？？
      */
     private volatile String generic;
 
@@ -323,14 +327,15 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         checkStubAndLocal(interfaceClass);
         checkMock(interfaceClass);
     }
-
+    //服务导出的入口
     public synchronized void export() {
+        //todo
         checkAndUpdateSubConfigs();
 
         if (!shouldExport()) {
             return;
         }
-
+        //延迟导出
         if (shouldDelay()) {
             delayExportExecutor.schedule(this::doExport, delay, TimeUnit.MILLISECONDS);
         } else {
@@ -408,17 +413,23 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
+    //多协议多注册中心导出服务
     private void doExportUrls() {
+        //加载(多)注册中心地址
         List<URL> registryURLs = loadRegistries(true);
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
+            //包装服务导出类
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
+            //放入维护的提供者集合
             ApplicationModel.initProviderModel(pathKey, providerModel);
+            //以当前协议导出服务
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+        //协议名称 默认dubbo
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = Constants.DUBBO;
@@ -432,6 +443,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         appendParameters(map, provider, Constants.DEFAULT_KEY);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
+        //解析当前服务的方法 todo 要解析成什么
         if (CollectionUtils.isNotEmpty(methods)) {
             for (MethodConfig method : methods) {
                 appendParameters(map, method, method.getName());
@@ -513,6 +525,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             }
         }
         // export service
+        //远程调用的地址 todo 将服务暴露给各个远程地址的注册中心
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
@@ -552,10 +565,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (StringUtils.isNotEmpty(proxy)) {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
-
+                        //包装服务
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
-
+                        //暴露服务
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
@@ -569,6 +582,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 /**
                  * @since 2.7.0
                  * ServiceData Store
+                 * 发布服务到注册中心存储，如zk，redis
                  */
                 MetadataReportService metadataReportService = null;
                 if ((metadataReportService = getMetadataReportService()) != null) {

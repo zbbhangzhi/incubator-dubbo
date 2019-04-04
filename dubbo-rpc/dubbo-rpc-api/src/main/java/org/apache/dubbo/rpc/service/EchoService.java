@@ -18,6 +18,7 @@ package org.apache.dubbo.rpc.service;
 
 /**
  * Echo service.
+ * 回声测试 包装需要调用的服务为EchoService 测试服务是否可用
  * @export
  */
 public interface EchoService {

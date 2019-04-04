@@ -81,7 +81,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
     protected void doStoreConsumerMetadata(MetadataIdentifier consumerMetadataIdentifier, String value) {
         storeMetadata(consumerMetadataIdentifier, value);
     }
-
+    //存储导出服务节点
     private void storeMetadata(MetadataIdentifier metadataIdentifier, String v) {
         zkClient.create(getNodePath(metadataIdentifier), v, false);
     }

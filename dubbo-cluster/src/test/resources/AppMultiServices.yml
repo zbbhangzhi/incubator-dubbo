@@ -20,7 +20,9 @@
 # Application scope, apply to the specified services
 ---
 configVersion: v2.7
+# 路由规则的作用粒度 application应用粒度 service 服务粒度
 scope: application
+# 明确由scope定义下的某个服务[{group}:]{service}[:{version}]或某个应用名
 key: demo-consumer
 configs:
 - addresses: [127.0.0.1, 0.0.0.0]

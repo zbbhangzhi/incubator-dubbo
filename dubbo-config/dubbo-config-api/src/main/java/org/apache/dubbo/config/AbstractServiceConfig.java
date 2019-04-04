@@ -36,11 +36,13 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * The service version
+     * 支持多版本 以区分新老接口
      */
     protected String version;
 
     /**
      * The service group
+     * 服务分组
      */
     protected String group;
 
@@ -51,6 +53,8 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * The time delay register service (milliseconds)
+     * -1 延迟到spring初始化完成 再暴露服务
+     * 5000 延迟5s暴露服务
      */
     protected Integer delay;
 
@@ -78,6 +82,8 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * Whether to use token
+     * 是否全局开启令牌验证 
+     * 功能：通过令牌验证在注册中心控制权限，可防止消费者绕过注册中心提供者
      */
     protected String token;
 
@@ -88,12 +94,14 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * The protocol list the service will export with
+     * 不同服务可支持不同协议 可根绝性能配置
      */
     protected List<ProtocolConfig> protocols;
     protected String protocolIds;
     // provider tag
     protected String tag;
     // max allowed execute times
+    //最大并行执行数
     private Integer executes;
 
     /**

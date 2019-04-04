@@ -58,7 +58,9 @@ import java.util.Properties;
 
 /**
  * ReferenceConfig
- *
+ * todo 这个是一对一的？
+ * 封装了与注册中心的连接以及与提供者的连接，如果重复生成会造成性能问题并会有内存和连接的泄露
+ * 所以使用ReferenceConfigCache缓存ReferenceConfig，以服务 Group、接口、版本为缓存的 Key
  * @export
  */
 public class ReferenceConfig<T> extends AbstractReferenceConfig {
@@ -115,6 +117,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     /**
      * The url for peer-to-peer invocation
+     * 用户指定的地址 可以是点对点地址 或者注册中心地址 （分号隔开）
+     * 可用于测试时使用 绕开注册中心
      */
     private String url;
 
@@ -301,7 +305,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             hostToRegistry = NetUtils.getLocalHost();
         }
         map.put(Constants.REGISTER_IP_KEY, hostToRegistry);
-
+        //生成代理类
         ref = createProxy(map);
 
         String serviceKey = URL.buildKey(interfaceName, group, version);
@@ -323,6 +327,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+        //injvm dubbo的伪协议 不发起远程端口调用 只在JVM内关联
         if (shouldJvmRefer(map)) {
             URL url = new URL(Constants.LOCAL_PROTOCOL, Constants.LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
             invoker = refprotocol.refer(interfaceClass, url);
@@ -330,6 +335,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
         } else {
+            //url已经指定 则解析装配到urls
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = Constants.SEMICOLON_SPLIT_PATTERN.split(url);
                 if (us != null && us.length > 0) {
@@ -338,6 +344,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         if (StringUtils.isEmpty(url.getPath())) {
                             url = url.setPath(interfaceName);
                         }
+                        //解析url配置到urls
+                        //todo
                         if (Constants.REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                             urls.add(url.addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map)));
                         } else {
@@ -411,7 +419,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
      * 2. then if a url is specified, then assume it's a remote call
      * 3. otherwise, check scope parameter
      * 4. if scope is not specified but the target service is provided in the same JVM, then prefer to make the local
-     * call, which is the default behavior
+     * call, which is the default behavior todo
      */
     protected boolean shouldJvmRefer(Map<String, String> map) {
         URL tmpUrl = new URL("temp", "localhost", 0, map);

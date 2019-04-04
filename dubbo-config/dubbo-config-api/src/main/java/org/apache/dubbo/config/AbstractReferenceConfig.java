@@ -35,6 +35,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     /**
      * Check if service provider exists, if not exists, it will be fast fail
+     * 启动时检查服务是否存在
      */
     protected Boolean check;
 
@@ -45,11 +46,13 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     /**
      * Whether to use generic interface
+     * 使用泛化调用
      */
     protected String generic;
 
     /**
      * Whether to find reference's instance from the current JVM
+     * 是否直接从JVM中关联服务
      */
     protected Boolean injvm;
 

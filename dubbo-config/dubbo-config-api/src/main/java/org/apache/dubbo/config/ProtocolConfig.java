@@ -63,6 +63,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Thread pool
+     * 线程池 fixed cached limited eager
      */
     private String threadpool;
 
@@ -88,6 +89,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Max acceptable connections
+     * 服务端最大连接数
      */
     private Integer accepts;
 
@@ -128,6 +130,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Transfort
+     * todo 线程模型
      */
     private String transporter;
 
@@ -138,6 +141,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     /**
      * Thread dispatch mode
+     * 线程派发策略 all direct message execution connection
      */
     private String dispatcher;
 

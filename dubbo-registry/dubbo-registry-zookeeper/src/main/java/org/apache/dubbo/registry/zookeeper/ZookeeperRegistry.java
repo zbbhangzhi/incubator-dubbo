@@ -51,9 +51,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
     private final static String DEFAULT_ROOT = "dubbo";
 
     private final String root;
-
+    //注册的服务
     private final Set<String> anyServices = new ConcurrentHashSet<>();
-
+    //监听器
     private final ConcurrentMap<URL, ConcurrentMap<NotifyListener, ChildListener>> zkListeners = new ConcurrentHashMap<URL, ConcurrentMap<NotifyListener, ChildListener>>();
 
     private final ZookeeperClient zkClient;
@@ -63,12 +63,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+        //
         String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT);
         if (!group.startsWith(Constants.PATH_SEPARATOR)) {
             group = Constants.PATH_SEPARATOR + group;
         }
         this.root = group;
         zkClient = zookeeperTransporter.connect(url);
+        //todo 这里state怎么进来的
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {
