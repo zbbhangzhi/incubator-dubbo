@@ -69,7 +69,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 
     private transient String beanName;
 
-    private transient boolean supportedApplicationListener;
+    private transient boolean supportedApplicationListener;//todo 这什么
 
     private ApplicationEventPublisher applicationEventPublisher;
 
@@ -104,6 +104,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         return service;
     }
 
+    //spring容器发布事件
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         //是否已经暴露服务 是否取消暴露
@@ -161,7 +162,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                     applicationConfig = config;
                 }
                 if (applicationConfig != null) {
-                    setApplication(applicationConfig);
+                    setApplication(applicationConfig);//设置全局application配置
                 }
             }
         }
@@ -215,7 +216,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                     }
                 }
                 if (!registryConfigs.isEmpty()) {
-                    super.setRegistries(registryConfigs);
+                    super.setRegistries(registryConfigs);//设置全局注册中心配置
                 }
             }
         }
@@ -286,7 +287,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
                 }
 
                 if (!protocolConfigs.isEmpty()) {
-                    super.setProtocols(protocolConfigs);
+                    super.setProtocols(protocolConfigs);//设置全局协议
                 }
             }
         }

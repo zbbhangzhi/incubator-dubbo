@@ -128,7 +128,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private Class<?> interfaceClass;
 
     /**
-     * The reference of the interface implementation
+     * The reference of the interface implementation 当前引用类的实现类
      */
     private T ref;
 
@@ -269,6 +269,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         completeCompoundConfigs();
         // Config Center should always being started first.
         startConfigCenter();
+        //检测provider是否为空 空则新建一个
         checkDefault();
         checkApplication();
         checkRegistry();
@@ -328,8 +329,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         checkMock(interfaceClass);
     }
     //服务导出的入口
+    //synchronized 加锁 提高安全性；synchronized属于重量锁为什么要加在方法上 不影响性能吗
+    //todo 暴露服务会出现线程安全问题吗
     public synchronized void export() {
-        //todo
+        //todo 配置检查
         checkAndUpdateSubConfigs();
 
         if (!shouldExport()) {
@@ -417,8 +420,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private void doExportUrls() {
         //加载(多)注册中心地址
         List<URL> registryURLs = loadRegistries(true);
+        //遍历 并在每个协议下导出服务 也就是说实际是通过protocol来发布服务
         for (ProtocolConfig protocolConfig : protocols) {
-            String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
+            String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);//org.apache.dubbo.demo.DemoService
             //包装服务导出类
             ProviderModel providerModel = new ProviderModel(pathKey, ref, interfaceClass);
             //放入维护的提供者集合
@@ -443,7 +447,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         appendParameters(map, provider, Constants.DEFAULT_KEY);
         appendParameters(map, protocolConfig);
         appendParameters(map, this);
-        //解析当前服务的方法 todo 要解析成什么
+        //解析当前服务的方法 todo 要解析成什么 从哪来的
         if (CollectionUtils.isNotEmpty(methods)) {
             for (MethodConfig method : methods) {
                 appendParameters(map, method, method.getName());
@@ -538,22 +542,27 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         String scope = url.getParameter(Constants.SCOPE_KEY);
         // don't export when none is configured
+        //scope为null 不导出服务
         if (!Constants.SCOPE_NONE.equalsIgnoreCase(scope)) {
 
             // export to local if the config is not remote (export to remote only when config is remote)
+            //导入到jvm
             if (!Constants.SCOPE_REMOTE.equalsIgnoreCase(scope)) {
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)
+            //导入到远程
             if (!Constants.SCOPE_LOCAL.equalsIgnoreCase(scope)) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
+                //加载监视器链接
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
                     for (URL registryURL : registryURLs) {
                         url = url.addParameterIfAbsent(Constants.DYNAMIC_KEY, registryURL.getParameter(Constants.DYNAMIC_KEY));
                         URL monitorUrl = loadMonitor(registryURL);
                         if (monitorUrl != null) {
+                            //将监视器链接作为参数加载到url
                             url = url.addParameterAndEncoded(Constants.MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
@@ -565,7 +574,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (StringUtils.isNotEmpty(proxy)) {
                             registryURL = registryURL.addParameter(Constants.PROXY_KEY, proxy);
                         }
-                        //包装服务
+                        //包装服务 生成动态代理类
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
                         //暴露服务
@@ -573,6 +582,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         exporters.add(exporter);
                     }
                 } else {
+                    //不存在注册中心 仅导出服务
                     Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
                     DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
@@ -595,12 +605,14 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void exportLocal(URL url) {
+        //如果url协议为injvm 则说明已经导入到本地了
         if (!Constants.LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
             URL local = URLBuilder.from(url)
                     .setProtocol(Constants.LOCAL_PROTOCOL)
                     .setHost(LOCALHOST_VALUE)
                     .setPort(0)
                     .build();
+            //url injvm://127.0.0.1/com.dfire.soa.mis.center.client.boss.service.IBindShopClientService?anyhost=true&application=mis-center-soa&default.accesslog=accessLogRotateFilter&default.cluster=failfast&default.delay=-1&default.loadbalance=leastactive&default.retries=0&default.timeout=30000&delay=-1&dubbo=2.6.3&environment=product&generic=false&interface=com.dfire.soa.mis.center.client.boss.service.IBindShopClientService&methods=getShopBunk,deleteBindShopRelations,checkBunkBound,deleteBindShopRelationsInner,getBunkListByContractNo,getEntityIdsByFormatIds,deleteShop,bindShop,getShopBrandFormats,getShopBrandFormat,getBindShop,bindShopBrandFormat,getShopBrand,bindShopBunk,bindShopBrand,getUnbindShop,unbindShop,editShop,getContractListByNo&owner=xxx&pid=14592&revision=1.0.0_better&side=provider&threads=400&timestamp=1557303428204&uptime=1557303482780&version=1.0.0_better
             Exporter<?> exporter = protocol.export(
                     proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
             exporters.add(exporter);
@@ -805,6 +817,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (provider != null) {
             return;
         }
+        //provider为空 则通过系统变量为其初始化
         setProvider (
                 ConfigManager.getInstance()
                         .getDefaultProvider()

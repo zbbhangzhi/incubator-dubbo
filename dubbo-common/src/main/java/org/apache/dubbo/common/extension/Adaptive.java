@@ -25,6 +25,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 装饰模式 两种使用
+ * 1. 他用来标注在接口的某个实现上，表示这个实现并不是提供具体业务支持，而是作为该接口的适配器
+ * 2. ExtensionLoader通过分析接口配置的adaptive规则动态生成adaptive类并且加载到ClassLoader中，来实现动态适配。
+ * todo 具体使用案例
  * Provide helpful information for {@link ExtensionLoader} to inject dependency extension instance.
  *
  * @see ExtensionLoader

@@ -54,9 +54,11 @@ public class RandomLoadBalance extends AbstractLoadBalance {
             }
         }
         if (totalWeight > 0 && !sameWeight) {
+            //生成一个线程隔离的安全随机权重
             // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on totalWeight.
             int offset = ThreadLocalRandom.current().nextInt(totalWeight);
             // Return a invoker based on the random value.
+            //获取随机权重所在的权重数组位置
             for (int i = 0; i < length; i++) {
                 offset -= weights[i];
                 if (offset < 0) {

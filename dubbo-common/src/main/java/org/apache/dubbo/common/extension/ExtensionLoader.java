@@ -48,6 +48,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 
 /**
+ * dubbo对SPI的自定义实现 并未使用JAVA SPI
+ * 扩展基类均使用注解@SPI标注
  * Load dubbo extensions
  * <ul>
  * <li>auto inject dependency extension </li>
@@ -99,6 +101,8 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
+        //2 初始化扩展点对象ExtensionLoader的工厂类实例
+        //3
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
@@ -106,6 +110,12 @@ public class ExtensionLoader<T> {
         return type.isAnnotationPresent(SPI.class);
     }
 
+    /**
+     * 获取插件调用链头部 0
+     * @param type
+     * @param <T>
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public static <T> ExtensionLoader<T> getExtensionLoader(Class<T> type) {
         if (type == null) {
@@ -121,6 +131,7 @@ public class ExtensionLoader<T> {
 
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
+            //1 私有构造方法 创建扩展点加载器实例
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         }
@@ -194,7 +205,7 @@ public class ExtensionLoader<T> {
 
     /**
      * Get activate extensions.
-     *
+     * 获取扩展类 并解析注解Active的配置
      * @param url    url
      * @param values extension point names
      * @param group  group
@@ -329,21 +340,26 @@ public class ExtensionLoader<T> {
     /**
      * Find the extension with the given name. If the specified name is not found, then {@link IllegalStateException}
      * will be thrown.
+     * 获取扩展类对象
      */
     @SuppressWarnings("unchecked")
     public T getExtension(String name) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
+        //获取默认扩展类
         if ("true".equals(name)) {
             return getDefaultExtension();
         }
+        //获取或创建持有类对象：先从缓存中查找 若未击中则新建
         Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
+        //双重检查
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
                 if (instance == null) {
+                    //创建对象
                     instance = createExtension(name);
                     holder.set(instance);
                 }
@@ -466,6 +482,7 @@ public class ExtensionLoader<T> {
         }
     }
 
+    //3 提供一层缓存包装
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
         Object instance = cachedAdaptiveInstance.get();
@@ -475,6 +492,7 @@ public class ExtensionLoader<T> {
                     instance = cachedAdaptiveInstance.get();
                     if (instance == null) {
                         try {
+                            //4
                             instance = createAdaptiveExtension();
                             cachedAdaptiveInstance.set(instance);
                         } catch (Throwable t) {
@@ -518,6 +536,7 @@ public class ExtensionLoader<T> {
 
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
+        //从spi配置文件META-INF中 加载扩展资源
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
@@ -525,12 +544,16 @@ public class ExtensionLoader<T> {
         try {
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
+                //2. 反射创建实例
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
+            //3. 向实例中注入依赖
             injectExtension(instance);
             Set<Class<?>> wrapperClasses = cachedWrapperClasses;
             if (CollectionUtils.isNotEmpty(wrapperClasses)) {
+                // 4. 将当前 instance 作为参数传给 Wrapper 的构造方法，并通过反射创建 Wrapper 实例。
+                //    然后向 Wrapper 实例中注入依赖，最后将 Wrapper 实例再次赋值给 instance 变量
                 for (Class<?> wrapperClass : wrapperClasses) {
                     instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                 }
@@ -541,7 +564,7 @@ public class ExtensionLoader<T> {
                     type + ") couldn't be instantiated: " + t.getMessage(), t);
         }
     }
-
+    //5 注入spi扩展实例，生成动态代理类
     private T injectExtension(T instance) {
         try {
             if (objectFactory != null) {
@@ -609,7 +632,7 @@ public class ExtensionLoader<T> {
         }
         return getExtensionClasses().get(name);
     }
-
+    //获取所有扩展类
     private Map<String, Class<?>> getExtensionClasses() {
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
@@ -625,6 +648,7 @@ public class ExtensionLoader<T> {
     }
 
     // synchronized in getExtensionClasses
+    // 资源加载 加载spi的扩展类
     private Map<String, Class<?>> loadExtensionClasses() {
         cacheDefaultExtensionName();
 
@@ -835,24 +859,31 @@ public class ExtensionLoader<T> {
         return extension.value();
     }
 
+    //4 完成扩展类的实例创建
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
+            //5
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
         }
     }
 
+    //6 获取自适应扩展类的定义
     private Class<?> getAdaptiveExtensionClass() {
+        //7 获取所有自适应扩展类的定义
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
             return cachedAdaptiveClass;
         }
+        //8
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    //8 动态生成自适应扩展类的实现
     private Class<?> createAdaptiveExtensionClass() {
+        //todo 9 从这里可以得知自适应扩展类adaptive被动态生成后的代码
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();

@@ -294,12 +294,15 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         if (CollectionUtils.isNotEmpty(registries)) {
             for (RegistryConfig config : registries) {
                 String address = config.getAddress();
+                //如果address为空 则设为0.0.0.0
                 if (StringUtils.isEmpty(address)) {
                     address = Constants.ANYHOST_VALUE;
                 }
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
+                    // 添加 ApplicationConfig 中的字段信息到 map 中
                     appendParameters(map, application);
+                    // 添加 RegistryConfig 字段信息到 map 中
                     appendParameters(map, config);
                     map.put(Constants.PATH_KEY, RegistryService.class.getName());
                     appendRuntimeParameters(map);
@@ -307,12 +310,15 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                         map.put(Constants.PROTOCOL_KEY, Constants.DUBBO_PROTOCOL);
                     }
                     List<URL> urls = UrlUtils.parseURLs(address, map);
-
+                    //url zookeeper://zk1.2dfire-daily.com:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&pid=12100&qos.port=22222&timestamp=1557300542472
                     for (URL url : urls) {
                         url = URLBuilder.from(url)
                                 .addParameter(Constants.REGISTRY_KEY, url.getProtocol())
+                                //将url协议头改为registry
                                 .setProtocol(Constants.REGISTRY_PROTOCOL)
                                 .build();
+                        //url registry://zk1.2dfire-daily.com:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&pid=12100&qos.port=22222&registry=zookeeper&timestamp=1557300542472
+                        //todo subscribe ？？
                         if ((provider && url.getParameter(Constants.REGISTER_KEY, true))
                                 || (!provider && url.getParameter(Constants.SUBSCRIBE_KEY, true))) {
                             registryList.add(url);

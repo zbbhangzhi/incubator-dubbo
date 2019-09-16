@@ -25,6 +25,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 标注在SPI插件接口实现类上，用于配置该接口实现类激活的条件
+ *
  * Activate. This annotation is useful for automatically activate certain extensions with the given criteria,
  * for examples: <code>@Activate</code> can be used to load certain <code>Filter</code> extension when there are
  * multiple implementations.
@@ -32,6 +34,7 @@ import java.lang.annotation.Target;
  * <li>{@link Activate#group()} specifies group criteria. Framework SPI defines the valid group values.
  * <li>{@link Activate#value()} specifies parameter key in {@link URL} criteria.
  * </ol>
+ * 比如实现filter接口且标注Active的实现类 会在ExtensionLoader加载进filter的责任链，根据group/order配置执行顺序，如果是开发自定义的filter将排到末尾
  * SPI provider can call {@link ExtensionLoader#getActivateExtension(URL, String, String)} to find out all activated
  * extensions with the given criteria.
  *
@@ -44,6 +47,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Activate {
     /**
+     * 实现类激活条件 比如是provider端或consumer端
      * Activate the current extension when one of the groups matches. The group passed into
      * {@link ExtensionLoader#getActivateExtension(URL, String, String)} will be used for matching.
      *
@@ -53,6 +57,7 @@ public @interface Activate {
     String[] group() default {};
 
     /**
+     * 当url上出现指定值时 激活实现类
      * Activate the current extension when the specified keys appear in the URL's parameters.
      * <p>
      * For example, given <code>@Activate("cache, validation")</code>, the current extension will be return only when
@@ -84,6 +89,7 @@ public @interface Activate {
     String[] after() default {};
 
     /**
+     * 用于控制同一类型的实现类执行排序 order值越大扩展实现类排序越靠前
      * Absolute ordering info, optional
      *
      * @return absolute ordering info
